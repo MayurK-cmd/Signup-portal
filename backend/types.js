@@ -11,4 +11,5 @@ const createSignup = zod.object({
 
 module.exports = {
     createSignup,
+    
 };
