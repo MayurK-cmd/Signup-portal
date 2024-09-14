@@ -1,35 +1,38 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 
-//Connect to mongodb
-mongoose.connect("YOURMONGODBURI/signup")
+// Connect to MongoDB
+mongoose.connect("")
+.then(() => console.log("MongoDB connected"))
+.catch(err => console.error("Connection error:", err));
 
-// Define the schema
+// Define the signup schema
 const signupSchema = new mongoose.Schema({
-    firstName: String,
-    lastName: String,
-    number: Number,
-    username: { type: String, unique: true },
-    email: { type: String, unique: true },
-    password: String
+  firstName: { type: String, required: true },
+  lastName: { type: String, required: true },
+  username: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  contactNumber: { type: String, required: true }, // Use JavaScript's Number type here
+  email: { type: String, required: true },
 });
 
-// Hash password before saving
-signupSchema.pre('save', async function(next) {
-    if (this.isModified('password') || this.isNew) {
-        const salt = await bcrypt.genSalt(10);
-        this.password = await bcrypt.hash(this.password, salt);
+// Hash the password before saving the user
+signupSchema.pre('save', async function (next) {
+  if (this.isModified('password')) {
+    try {
+      this.password = await bcrypt.hash(this.password, 10); // Hash the password
+    } catch (err) {
+      return next(err);
     }
-    next();
+  }
+  next();
 });
 
-// Compare password method
-signupSchema.methods.comparePassword = function(candidatePassword) {
-    return bcrypt.compare(candidatePassword, this.password);
+// Method to compare passwords using bcrypt
+signupSchema.methods.comparePassword = async function (candidatePassword) {
+  return bcrypt.compare(candidatePassword, this.password); // Compare the password using bcrypt
 };
 
 const Signup = mongoose.model('Signup', signupSchema);
 
-module.exports = {
-    Signup // Ensure this is exported
-};
+module.exports = { Signup };
